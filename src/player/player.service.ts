@@ -8,6 +8,7 @@ import { Types } from 'mongoose';
 import _Response from 'src/types';
 import { Team, TeamDocument } from 'src/team/schema/team.schema';
 import { Season, SeasonDocment } from 'src/season/schema/season.schema';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PlayerService {
@@ -17,6 +18,7 @@ export class PlayerService {
     @InjectModel(Team.name) private teamModel: Model<TeamDocument>,
     @InjectModel(Season.name) private seasonModel: Model<SeasonDocment>,
     private readonly importService: DataImportService,
+    private readonly configService: ConfigService,
   ) {}
 
   async findAll() {
@@ -72,7 +74,10 @@ export class PlayerService {
       .exec();
 
     const team = await this.teamModel
-      .findOne({ id: players[0].teamId }, { _id: 1, id: 1, name: 1, imgPath: 1 })
+      .findOne(
+        { id: players[0].teamId },
+        { _id: 1, id: 1, name: 1, imgPath: 1 },
+      )
       .exec();
 
     return {
@@ -378,6 +383,113 @@ export class PlayerService {
         },
         {
           $limit: 20,
+        },
+      ])
+      .exec();
+    return players;
+  }
+
+  async getMostSignificant(seasonId: number) {
+    const players = await this.statModel
+      .aggregate([
+        {
+          $match: {
+            seasonId: seasonId,
+          },
+        },
+        {
+          $lookup: {
+            from: 'players',
+            localField: 'playerId',
+            foreignField: '_id',
+            as: 'player',
+          },
+        },
+        {
+          $unwind: {
+            path: '$player',
+          },
+        },
+        {
+          $addFields: {
+            cont: { $add: ['$totalGoals', '$assists'] },
+          },
+        },
+        {
+          $sort: {
+            cont: -1,
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            id: '$playerId',
+            name: '$player.name',
+            image: '$player.imagePath',
+          },
+        },
+        {
+          $limit: 20,
+        },
+      ])
+      .exec();
+    return players;
+  }
+
+  async getBestplayer() {
+    const players = await this.statModel
+      .aggregate([
+        {
+          $match: { seasonId: 21787 },
+        },
+        {
+          $lookup: {
+            from: 'players',
+            localField: 'playerId',
+            foreignField: '_id',
+            as: 'player',
+          },
+        },
+        {
+          $unwind: {
+            path: '$player',
+          },
+        },
+        {
+          $lookup: {
+            from: 'teams',
+            localField: 'player.teamId',
+            foreignField: 'id',
+            as: 'team',
+          },
+        },
+        {
+          $unwind: {
+            path: '$team',
+          },
+        },
+        {
+          $addFields: {
+            cont: { $add: ['$totalGoals', '$assists'] },
+          },
+        },
+        {
+          $sort: {
+            cont: -1,
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            id: '$playerId',
+            first_name: '$player.firstName',
+            last_name: '$player.lastName',
+            image: '$player.imagePath',
+            cont: 1
+          },
+        },
+        {
+          $limit: 1,
         },
       ])
       .exec();

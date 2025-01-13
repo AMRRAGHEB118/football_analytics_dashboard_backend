@@ -33,7 +33,7 @@ export class AuthController {
           duration,
         );
         return res.status(401).json({
-          msg: 'Invalid admin info',
+          message: 'Invalid admin info',
           status_code: 401,
           data: [],
           accessToken: null,
@@ -49,7 +49,7 @@ export class AuthController {
         duration,
       );
       return res.status(200).json({
-        msg: 'Authorized! Come on in ..',
+        message: 'Authorized! Come on in ..',
         status_code: 200,
         data: [],
         accessToken,
@@ -67,7 +67,7 @@ export class AuthController {
         error,
       );
       return res.status(500).json({
-        msg: 'Server Error happened while logging in, please try again later!',
+        message: 'Server Error happened while logging in, please try again later!',
         status_code: 500,
         data: [],
         accessToken: null,

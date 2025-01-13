@@ -55,7 +55,7 @@ export class SeasonController {
       500,
       LoggerModule.SEASON,
       duration,
-      result.err
+      result.err,
     );
     return response.status(500).send({
       message: 'Failed to fetch seasons, try again later.',
@@ -105,6 +105,51 @@ export class SeasonController {
       this.loggerService.logError(
         `Failed to get seasons`,
         'seasons/',
+        'GET',
+        500,
+        LoggerModule.SEASON,
+        duration,
+        error,
+      );
+      return response.status(500).send({
+        message: 'Failed to get seasons.',
+        status_code: 500,
+        data: [],
+      });
+    }
+  }
+
+  @Get('league-seasons/:leagueId')
+  async getLeagueSeasons(@Res() response: Response,
+  @Param(
+    'leagueId',
+    new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+  ) leagueId: number
+) {
+    const s: number = performance.now();
+    try {
+      const seasons = await this.seasonService.getLeagueSeasons(leagueId);
+      let duration: number = performance.now() - s;
+      duration = parseFloat(duration.toFixed(2));
+      this.loggerService.logInfo(
+        `Seasons retrieved successfully`,
+        'seasons/league-seasons/:leagueId',
+        'GET',
+        200,
+        LoggerModule.SEASON,
+        duration,
+      );
+      return response.status(200).send({
+        message: 'Seasons retrieved successfully.',
+        status_code: 200,
+        data: seasons,
+      });
+    } catch (error) {
+      let duration: number = performance.now() - s;
+      duration = parseFloat(duration.toFixed(2));
+      this.loggerService.logError(
+        `Failed to get seasons`,
+        'seasons/league-seasons/:leagueId',
         'GET',
         500,
         LoggerModule.SEASON,

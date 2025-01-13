@@ -409,7 +409,7 @@ export class PlayerController {
   }
 
   @Get('statistics/top-contributions/:seasonId')
-  async getTopRedCardOfSeason(
+  async getTopContributersOfSeason(
     @Param(
       'seasonId',
       new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
@@ -457,6 +457,110 @@ export class PlayerController {
       this.loggerService.logError(
         `Error happened for season: ${seasonId}`,
         '/players/statistics/top-contributions/:seasonId',
+        'GET',
+        500,
+        LoggerModule.PLAYER,
+        duration,
+        error,
+      );
+      return response.status(500).send({
+        message: 'Server error happened',
+        status_code: 500,
+        data: [],
+      });
+    }
+  }
+
+  @Get('statistics/most-signficant/:seasonId')
+  async getMostSignificantOfSeason(
+    @Param(
+      'seasonId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    seasonId: number,
+    @Res() response: Response,
+  ) {
+    const s: number = performance.now();
+    try {
+      const result = await this.playerService.getMostSignificant(seasonId);
+      let duration: number = performance.now() - s;
+      duration = parseFloat(duration.toFixed(2));
+      if (result.length === 0) {
+        this.loggerService.logError(
+          `No statistics found for season: ${seasonId}`,
+          '/players/statistics/most-signficant/:seasonId',
+          'GET',
+          404,
+          LoggerModule.PLAYER,
+          duration,
+        );
+        return response.status(404).send({
+          message: 'No statistics found for this season',
+          status_code: 404,
+          data: [],
+        });
+      }
+
+      this.loggerService.logInfo(
+        `Players retrieved successfully for season: ${seasonId}`,
+        '/players/statistics/most-signficant/:seasonId',
+        'GET',
+        200,
+        LoggerModule.PLAYER,
+        duration,
+      );
+      return response.status(200).send({
+        message: 'Top contributed players retrieved successfully',
+        status_code: 200,
+        data: result,
+      });
+    } catch (error) {
+      let duration: number = performance.now() - s;
+      duration = parseFloat(duration.toFixed(2));
+      this.loggerService.logError(
+        `Error happened for season: ${seasonId}`,
+        '/players/statistics/most-signficant/:seasonId',
+        'GET',
+        500,
+        LoggerModule.PLAYER,
+        duration,
+        error,
+      );
+      return response.status(500).send({
+        message: 'Server error happened',
+        status_code: 500,
+        data: [],
+      });
+    }
+  }
+
+  @Get('best-player')
+  async getBestPlayer(@Res() response: Response,) {
+    const s: number = performance.now();
+    try {
+      const result = await this.playerService.getBestplayer();
+      let duration: number = performance.now() - s;
+      duration = parseFloat(duration.toFixed(2));
+
+      this.loggerService.logInfo(
+        `Best player retrieved successfully for season`,
+        '/players/best-player/',
+        'GET',
+        200,
+        LoggerModule.PLAYER,
+        duration,
+      );
+      return response.status(200).send({
+        message: 'Best player retrieved successfully for season',
+        status_code: 200,
+        data: result,
+      });
+    } catch (error) {
+      let duration: number = performance.now() - s;
+      duration = parseFloat(duration.toFixed(2));
+      this.loggerService.logError(
+        `Error happened while retreiving best player`,
+        '/players/best-player/',
         'GET',
         500,
         LoggerModule.PLAYER,

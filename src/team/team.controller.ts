@@ -80,178 +80,47 @@ export class TeamController {
     }
   }
 
-  @Get(':id/:seasonId')
-  async getTeam(
-    @Param()
-    id: Types.ObjectId,
-    @Param(
-      'seasonId',
-      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
-    )
-    seasonId: number,
-    @Res() response: Response,
-  ) {
-    if (!Types.ObjectId.isValid) {
-      return response.status(406).send({
-        message: 'Wrong ObjectId',
-        status_code: 406,
-        data: [],
-      });
-    }
-    const _id = new Types.ObjectId(id);
+  @Get('all')
+  async getTeams(@Res() response: Response) {
     const s: number = performance.now();
     try {
-      const result = await this.teamService.findOne(_id, seasonId);
+      const result = await this.teamService.getTeams();
       let duration: number = performance.now() - s;
       duration = parseFloat((duration / 1000).toFixed(2));
 
-      if (!result) {
-        this.loggerService.logError(
-          `Team ${id} not found`,
-          '/team/:id/:seasonId',
-          'GET',
-          404,
-          LoggerModule.TEAM,
-          duration,
-        );
-        return response.status(404).send({
-          message: 'Team not found ,Please make sure of team id',
-          status_code: 404,
-          data: [],
-        });
-      }
       this.loggerService.logInfo(
-        `Team => ${id} for season => ${seasonId} found successfully`,
-        '/team/:id',
-        'GET',
-        200,
-        LoggerModule.TEAM,
-      );
-      return response.status(200).send({
-        message: 'Team found successfully',
-        status_code: 200,
-        data: [result],
-      });
-    } catch (err) {
-      this.loggerService.logError(
-        `Error retrieving (team: ${id}) data` +
-          `for (season: ${seasonId}) from database`,
-        '/team/:id/:seasonId',
-        'GET',
-        500,
-        LoggerModule.TEAM,
-        err,
-      );
-      return response.status(500).send({
-        message:
-          `Error retrieving {team: ${id}} data for` +
-          `{season: ${seasonId}} from database`,
-        status_code: 500,
-        data: [],
-      });
-    }
-  }
-
-  @Get(':id')
-  async reloadTeam(
-    @Param(
-      'id',
-      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
-    )
-    id: number,
-    @Res() response: Response,
-  ) {
-    const s: number = performance.now();
-    const result = await this.teamService.reloadTeam(id);
-    let duration: number = performance.now() - s;
-    duration = parseFloat((duration / 1000).toFixed(2));
-    if (result.status_code == 200) {
-      this.loggerService.logInfo(
-        `Team ${id} reloaded successfully`,
-        '/team/:id',
+        `Teams retr successfully`,
+        '/team/all',
         'GET',
         200,
         LoggerModule.TEAM,
         duration,
       );
       return response.status(200).send({
-        message: 'Team reloaded successfully',
+        message: 'Teams fetched successfully',
         status_code: 200,
-        data: [result.data],
+        data: result,
       });
-    } else if (result.status_code == 404) {
-      this.loggerService.logError(
-        `Team ${id} doesn't exist`,
-        '/team/:id',
-        'GET',
-        404,
-        LoggerModule.TEAM,
-        duration,
-      );
-      return response.status(404).send({
-        message: 'Team not found ,Please make sure of team id',
-        status_code: 404,
-        data: [],
-      });
-    } else {
+    } catch (error) {
       let duration: number = performance.now() - s;
       duration = parseFloat((duration / 1000).toFixed(2));
       this.loggerService.logError(
-        `Server error happened while reloading Team => ${id}`,
-        '/team/:id',
+        'Server error happened while retrieving teams',
+        '/team/all',
         'GET',
         500,
         LoggerModule.TEAM,
         duration,
-        result.err,
+        error,
       );
       return response.status(500).send({
         message:
-          'Error happened while reloading the team, please try again later',
+          'Error happened while retrieving teams, please try again later',
         status_code: 500,
         data: [],
       });
     }
   }
-
-  // @Get('fetch')
-  // async fetchAll(@Res() response: Response) {
-  //   const s: number = performance.now();
-
-  //   const result = await this.teamService.fetchAllTeams();
-  //   let duration: number = performance.now() - s;
-  //   duration = parseFloat((duration / 1000).toFixed(2));
-  //   if (result.status_code == 200) {
-  //     this.loggerService.logInfo(
-  //       `Teams fetched successfully`,
-  //       '/team',
-  //       'GET',
-  //       200,
-  //       LoggerModule.TEAM,
-  //       duration,
-  //     );
-  //     return response.status(200).send({
-  //       message: 'Teams fetched successfully',
-  //       status_code: 200,
-  //       data: [result.data],
-  //     });
-  //   } else {
-  //     this.loggerService.logError(
-  //       'Server error happened while fethcing teams',
-  //       '/team',
-  //       'GET',
-  //       500,
-  //       LoggerModule.TEAM,
-  //       duration,
-  //       result.err,
-  //     );
-  //     return response.status(500).send({
-  //       message: 'Error happened while fetching, please try again later',
-  //       status_code: 500,
-  //       data: [],
-  //     });
-  //   }
-  // }
 
   @Get('statistics/top-score/:seasonId')
   async getTopScorerOfSeason(
@@ -585,6 +454,243 @@ export class TeamController {
       );
       return response.status(500).send({
         message: 'Server Error happened',
+        status_code: 500,
+        data: [],
+      });
+    }
+  }
+
+  @Get('statistics/most-won')
+  async getMostWon(@Res() response: Response) {
+    const s: number = performance.now();
+    try {
+      const result = await this.teamService.getMostWon();
+      let duration: number = performance.now() - s;
+      duration = parseFloat((duration / 1000).toFixed(2));
+
+      this.loggerService.logInfo(
+        `Statistics retieved successfully for season`,
+        'team/statistics/most-win',
+        'GET',
+        200,
+        LoggerModule.TEAM,
+        duration,
+      );
+
+      return response.status(200).send({
+        message: 'Most won team retrieved successfully',
+        status_code: 200,
+        data: result,
+      });
+    } catch (error) {
+      let duration: number = performance.now() - s;
+      duration = parseFloat((duration / 1000).toFixed(2));
+      this.loggerService.logError(
+        `Server Error happened while retrieving most won team`,
+        'team/statistics/most-win',
+        'GET',
+        500,
+        LoggerModule.TEAM,
+        duration,
+        error,
+      );
+      return response.status(500).send({
+        message: 'Server Error happened',
+        status_code: 500,
+        data: [],
+      });
+    }
+  }
+
+  @Get('reload/:id')
+  async reloadTeam(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+    @Res() response: Response,
+  ) {
+    const s: number = performance.now();
+    const result = await this.teamService.reloadTeam(id);
+    let duration: number = performance.now() - s;
+    duration = parseFloat((duration / 1000).toFixed(2));
+    if (result.status_code == 200) {
+      this.loggerService.logInfo(
+        `Team ${id} reloaded successfully`,
+        '/team/reload/:id',
+        'GET',
+        200,
+        LoggerModule.TEAM,
+        duration,
+      );
+      return response.status(200).send({
+        message: 'Team reloaded successfully',
+        status_code: 200,
+        data: [result.data],
+      });
+    } else if (result.status_code == 404) {
+      this.loggerService.logError(
+        `Team ${id} doesn't exist`,
+        '/team/reload/:id',
+        'GET',
+        404,
+        LoggerModule.TEAM,
+        duration,
+      );
+      return response.status(404).send({
+        message: 'Team not found ,Please make sure of team id',
+        status_code: 404,
+        data: [],
+      });
+    } else {
+      let duration: number = performance.now() - s;
+      duration = parseFloat((duration / 1000).toFixed(2));
+      this.loggerService.logError(
+        `Server error happened while reloading Team => ${id}`,
+        '/team/reload/:id',
+        'GET',
+        500,
+        LoggerModule.TEAM,
+        duration,
+        result.err,
+      );
+      return response.status(500).send({
+        message:
+          'Error happened while reloading the team, please try again later',
+        status_code: 500,
+        data: [],
+      });
+    }
+  }
+
+  @Get(':id')
+  async getTeam(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    id: number,
+    @Res() response: Response,
+  ) {
+    const s: number = performance.now();
+    const result = await this.teamService.getTeamInfo(id);
+    let duration: number = performance.now() - s;
+    duration = parseFloat((duration / 1000).toFixed(2));
+    if (result.length > 0) {
+      this.loggerService.logInfo(
+        `Team ${id} reloaded successfully`,
+        '/team/:id',
+        'GET',
+        200,
+        LoggerModule.TEAM,
+        duration,
+      );
+      return response.status(200).send({
+        message: 'Team retrieved successfully',
+        status_code: 200,
+        data: result,
+      });
+    }  else if (result.length === 0) {
+      this.loggerService.logError(
+        `Team ${id} not found`,
+        '/team/:id',
+        'GET',
+        404,
+        LoggerModule.TEAM,
+        duration,
+      );
+      return response.status(404).send({
+        message: 'Team not found ,Please make sure of team id',
+        status_code: 404,
+        data: [],
+      });
+    } else {
+      let duration: number = performance.now() - s;
+      duration = parseFloat((duration / 1000).toFixed(2));
+      this.loggerService.logError(
+        `Server error happened while reloading Team => ${id}`,
+        '/team/:id',
+        'GET',
+        500,
+        LoggerModule.TEAM,
+        duration,
+      );
+      return response.status(500).send({
+        message:
+          'Error happened while retrieving the team, please try again later',
+        status_code: 500,
+        data: [],
+      });
+    }
+  }
+
+  @Get(':id/:seasonId')
+  async getTeamStats(
+    @Param()
+    id: Types.ObjectId,
+    @Param(
+      'seasonId',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    )
+    seasonId: number,
+    @Res() response: Response,
+  ) {
+    if (!Types.ObjectId.isValid) {
+      return response.status(406).send({
+        message: 'Wrong ObjectId',
+        status_code: 406,
+        data: [],
+      });
+    }
+    const _id = new Types.ObjectId(id);
+    const s: number = performance.now();
+    try {
+      const result = await this.teamService.findOne(_id, seasonId);
+      let duration: number = performance.now() - s;
+      duration = parseFloat((duration / 1000).toFixed(2));
+
+      if (!result) {
+        this.loggerService.logError(
+          `Team ${id} not found`,
+          '/team/:id/:seasonId',
+          'GET',
+          404,
+          LoggerModule.TEAM,
+          duration,
+        );
+        return response.status(404).send({
+          message: 'Team not found ,Please make sure of team id',
+          status_code: 404,
+          data: [],
+        });
+      }
+      this.loggerService.logInfo(
+        `Team => ${id} for season => ${seasonId} found successfully`,
+        '/team/:id',
+        'GET',
+        200,
+        LoggerModule.TEAM,
+      );
+      return response.status(200).send({
+        message: 'Team found successfully',
+        status_code: 200,
+        data: [result],
+      });
+    } catch (err) {
+      this.loggerService.logError(
+        `Error retrieving (team: ${id}) data` +
+          `for (season: ${seasonId}) from database`,
+        '/team/:id/:seasonId',
+        'GET',
+        500,
+        LoggerModule.TEAM,
+        err,
+      );
+      return response.status(500).send({
+        message:
+          `Error retrieving {team: ${id}} data for` +
+          `{season: ${seasonId}} from database`,
         status_code: 500,
         data: [],
       });

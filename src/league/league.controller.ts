@@ -12,18 +12,13 @@ import { Response } from 'express';
 import { LoggerService } from 'src/services/logger/logger.service';
 import { LoggerModule } from 'src/services/logger/logger.schema';
 
-type ResponseObj = {
-  message: string;
-  status_code: number;
-  data: any[];
-};
 
 export type MainStats = {
-  topPlayersScored: ResponseObj;
-  topPlayersAssisted: ResponseObj;
-  topTeamsPossessed: ResponseObj;
-  topTeamsScored: ResponseObj;
-  mostFailedToScore: ResponseObj;
+  topPlayersScored: any[];
+  topPlayersAssisted: any[];
+  topTeamsPossessed: any[];
+  topTeamsScored: any[];
+  mostFailedToScore: any[];
 };
 
 @Controller('league')
@@ -77,6 +72,47 @@ export class LeagueController {
       this.loggerService.logError(
         `Failed to retrieve leagues`,
         '/league',
+        'GET',
+        500,
+        LoggerModule.LEAGUE,
+        duration,
+        err,
+      );
+      return response.status(500).send({
+        message: 'Server Error happened',
+        status_code: 500,
+        data: [],
+      });
+    }
+  }
+
+  @Get('top-league')
+  async getTopLeague(@Res() response: Response): Promise<Response> {
+    const s: number = performance.now();
+    try {
+      const result = await this.leagueService.getTopLeague();
+      let duration: number = performance.now() - s;
+      duration = parseFloat(duration.toFixed(2));
+
+      this.loggerService.logInfo(
+        'League retrieved successfully',
+        '/league/top-league',
+        'GET',
+        200,
+        LoggerModule.LEAGUE,
+        duration,
+      );
+      return response.status(200).send({
+        message: 'league retrieved successfully',
+        status_code: 200,
+        data: result,
+      });
+    } catch (err) {
+      let duration: number = performance.now() - s;
+      duration = parseFloat(duration.toFixed(2));
+      this.loggerService.logError(
+        `Failed to retrieve league`,
+        '/league/top-league',
         'GET',
         500,
         LoggerModule.LEAGUE,
@@ -166,7 +202,8 @@ export class LeagueController {
   ): Promise<Response> {
     const s: number = performance.now();
     try {
-      const stats: MainStats = await this.leagueService.getLeagueStats(seasonId);
+      const stats: MainStats =
+        await this.leagueService.getLeagueStats(seasonId);
       let duration: number = performance.now() - s;
       duration = parseFloat(duration.toFixed(2));
       this.loggerService.logInfo(
