@@ -13,7 +13,6 @@ import {
 } from '../../player/schema/statistics.schema';
 import { ConfigService } from '@nestjs/config';
 import { Season, SeasonDocment } from 'src/season/schema/season.schema';
-import _Response from 'src/types';
 import { League, LeagueDocument } from 'src/league/schema/league.schema';
 
 @Injectable()

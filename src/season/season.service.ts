@@ -19,4 +19,8 @@ export class SeasonService {
   async getSeasons(): Promise<object> {
     return this.seasonModel.find().sort({ name: -1 }).exec();
   }
+
+  async getLeagueSeasons(leagueId: number): Promise<Array<any>> {
+    return this.seasonModel.find({ leagueId }, { name: 1, id: 1 }).sort({ name: -1 }).exec();
+  }
 }

@@ -3,8 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Team } from './schema/team.schema';
 import { Model, Types } from 'mongoose';
 import { DataImportService } from 'src/services/dataImport/data.import.service';
-import { LoggerService } from 'src/services/logger/logger.service';
 import { TeamStatistics } from './schema/teamStats.schema';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class TeamService {
@@ -12,11 +12,21 @@ export class TeamService {
     @InjectModel(Team.name) private teamModel: Model<Team>,
     @InjectModel(TeamStatistics.name) private statModel: Model<TeamStatistics>,
     private readonly dataImport: DataImportService,
-    private readonly loggerService: LoggerService,
+    private readonly configService: ConfigService,
   ) {}
 
   async getLeagueTeams(leagueId: number) {
     return this.teamModel.find({ leagueId });
+  }
+
+  async getTeamInfo(id: number) {
+    return this.teamModel.find({ id }, {__v: 0}).populate({ path: 'statistics' });
+  }
+
+  async getTeams() {
+    return this.teamModel
+      .find({}, { id: '$_id', image: '$imgPath', name: 1 })
+      .limit(30);
   }
 
   async findOne(id: Types.ObjectId, seasonId: number) {
@@ -29,10 +39,6 @@ export class TeamService {
   async reloadTeam(id: number) {
     return this.dataImport.importTeam(id);
   }
-
-  // async fetchAllTeams() {
-  //   return await this.dataImport.fetchAllTeams();
-  // }
 
   async getTopScorerOfSeason(seasonId: number) {
     const teams = await this.statModel.aggregate([
@@ -324,5 +330,63 @@ export class TeamService {
       },
     ]);
     return teams;
+  }
+
+  async getMostWon() {
+    const season: number = this.configService.get<number>('CURRENT_SEASON');
+
+    return this.statModel.aggregate([
+      {
+        $match: {
+          seasonId: Number(season),
+        },
+      },
+      {
+        $lookup: {
+          from: 'teams',
+          localField: 'teamId',
+          foreignField: '_id',
+          as: 'team',
+        },
+      },
+      {
+        $unwind: {
+          path: '$team',
+        },
+      },
+      {
+        $lookup: {
+          from: 'seasons',
+          localField: 'seasonId',
+          foreignField: 'id',
+          as: 'season',
+        },
+      },
+      {
+        $unwind: {
+          path: '$season',
+        },
+      },
+      {
+        $addFields: {
+          wins: { $add: ['$winHome', '$winAway'] },
+        },
+      },
+      {
+        $sort: {
+          wins: -1,
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          id: '$team._id',
+          name: '$team.name',
+          image: '$team.imgPath',
+          short_code: '$team.shortCode',
+          wins: 1,
+        },
+      },
+    ]);
   }
 }

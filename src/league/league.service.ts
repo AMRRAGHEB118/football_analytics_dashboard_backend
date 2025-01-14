@@ -67,11 +67,19 @@ export class LeagueService {
     }
 
     return {
-      topPlayersScored,
-      topPlayersAssisted,
-      topTeamsPossessed,
-      topTeamsScored,
-      mostFailedToScore,
+      topPlayersScored: topPlayersScored.data,
+      topPlayersAssisted: topPlayersAssisted.data,
+      topTeamsPossessed: topTeamsPossessed.data,
+      topTeamsScored: topTeamsScored.data,
+      mostFailedToScore: mostFailedToScore.data,
     };
+  }
+
+  async getTopLeague() {
+    return this.leagueModel.find({}, {
+      name: 1,
+      image: '$imagePath',
+      short_code: '$shortCode'
+    }).limit(1);
   }
 }

@@ -96,6 +96,62 @@ export class NewsService {
   }
 
   async getNews() {
-    // Under implementation
+    const news = await this.newsModel
+      .find(
+        {},
+        {
+          title: 1,
+          img: 1,
+          url: 1,
+          date: {
+            $dateToString: {
+              format: '%b %d, %Y',
+              date: '$createdAt',
+            },
+          },
+          time: {
+            $dateToString: {
+              format: '%H:%M',
+              date: '$createdAt',
+            },
+          },
+        },
+      )
+      .sort({ createdAt: -1 })
+      .limit(15);
+    return news;
+  }
+
+  async getNewsPaginated(page: number) {
+    const offset = (page - 1) * 24;
+    const news = await this.newsModel
+      .find(
+        {},
+        {
+          title: 1,
+          img: 1,
+          url: 1,
+          date: {
+            $dateToString: {
+              format: '%b %d, %Y',
+              date: '$createdAt',
+            },
+          },
+          time: {
+            $dateToString: {
+              format: '%H:%M',
+              date: '$createdAt',
+            },
+          },
+        },
+      )
+      .sort({ createdAt: -1 })
+      .skip(offset)
+      .limit(24)
+      .exec();
+
+    let count: number = await this.newsModel.countDocuments().exec();
+    count = parseInt((count / 24).toString()) + 1;
+    return { data: news, count };
   }
 }
