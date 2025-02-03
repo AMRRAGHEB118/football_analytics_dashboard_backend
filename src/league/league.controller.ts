@@ -18,6 +18,9 @@ export type MainStats = {
   topPlayersAssisted: any[];
   topTeamsPossessed: any[];
   topTeamsScored: any[];
+  mostYellowCarded: any[];
+  topContributers: any[];
+  topMinutesPlayed: any[];
   mostFailedToScore: any[];
 };
 
