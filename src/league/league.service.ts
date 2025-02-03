@@ -29,12 +29,12 @@ export class LeagueService {
   async getLeagueStats(seasonId: number): Promise<MainStats> {
     const topPlayersScored: _ServerResponse = (
       await this.axiosService.instance(
-        `${process.env.SERVER_URL}/players/statistics/top-score/${seasonId}/1`,
+        `${process.env.SERVER_URL}/players/statistics/top-score/${seasonId}`,
       )
     ).data;
     const topPlayersAssisted: _ServerResponse = (
       await this.axiosService.instance(
-        `${process.env.SERVER_URL}/players/statistics/top-assist/${seasonId}/1`,
+        `${process.env.SERVER_URL}/players/statistics/top-assist/${seasonId}`,
       )
     ).data;
     const topTeamsScored: _ServerResponse = (
@@ -53,33 +53,12 @@ export class LeagueService {
       )
     ).data;
 
-    const mostYellowCarded: _ServerResponse = (
-      await this.axiosService.instance(
-        `${process.env.SERVER_URL}/players/statistics/top-yellow-card/${seasonId}`,
-      )
-    ).data;
-
-    const topContributers: _ServerResponse = (
-      await this.axiosService.instance(
-        `${process.env.SERVER_URL}/players/statistics/top-contributions/${seasonId}`,
-      )
-    ).data;
-  
-    const topMinutesPlayed: _ServerResponse = (
-      await this.axiosService.instance(
-        `${process.env.SERVER_URL}/players/statistics/top-minutes-played/${seasonId}`,
-      )
-    ).data;
-
     if (
       topPlayersAssisted.status_code === 500 ||
       topPlayersScored.status_code === 500 ||
       topTeamsPossessed.status_code === 500 ||
       topTeamsScored.status_code === 500 ||
-      mostYellowCarded.status_code === 500 ||
-      topContributers.status_code === 500 ||
-      mostFailedToScore.status_code === 500 ||
-      topMinutesPlayed.status_code === 500
+      mostFailedToScore.status_code === 500
     ) {
       throw new HttpException(
         'Server Error happened while retrieving league stats',
@@ -93,15 +72,11 @@ export class LeagueService {
       topTeamsPossessed: topTeamsPossessed.data,
       topTeamsScored: topTeamsScored.data,
       mostFailedToScore: mostFailedToScore.data,
-      mostYellowCarded: mostYellowCarded.data,
-      topContributers: topContributers.data,
-      topMinutesPlayed: topMinutesPlayed.data,
     };
   }
 
   async getTopLeague() {
     return this.leagueModel.find({}, {
-      id: 1,
       name: 1,
       image: '$imagePath',
       short_code: '$shortCode'

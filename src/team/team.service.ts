@@ -20,14 +20,12 @@ export class TeamService {
   }
 
   async getTeamInfo(id: number) {
-    return this.teamModel
-      .find({ id }, { __v: 0 })
-      .populate({ path: 'statistics' });
+    return this.teamModel.find({ id }, {__v: 0}).populate({ path: 'statistics' });
   }
 
   async getTeams() {
     return this.teamModel
-      .find({}, { id: 1, image: '$imgPath', name: 1 })
+      .find({}, { id: '$_id', image: '$imgPath', name: 1 })
       .limit(30);
   }
 
@@ -381,8 +379,8 @@ export class TeamService {
       },
       {
         $project: {
-          _id: 1,
-          id: '$team.id',
+          _id: 0,
+          id: '$team._id',
           name: '$team.name',
           image: '$team.imgPath',
           short_code: '$team.shortCode',

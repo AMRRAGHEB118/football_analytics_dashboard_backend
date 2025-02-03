@@ -14,10 +14,5 @@ import { LoggerModule } from 'src/services/logger/logger.module';
   ],
   controllers: [SeasonController],
   providers: [SeasonService],
-  exports: [
-    MongooseModule.forFeature([
-      { name: Season.name, schema: SeasonSchema },
-    ]),
-  ],
 })
 export class SeasonModule {}

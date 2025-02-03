@@ -90,8 +90,7 @@ export class PlayerService {
     return this.importService.importPlayerData(id);
   }
 
-  async getTopScorerOfSeason(seasonId: number, page: number) {
-    const offset = (page - 1) * 20;
+  async getTopScorerOfSeason(seasonId: number) {
     const players = await this.statModel
       .aggregate([
         {
@@ -103,9 +102,6 @@ export class PlayerService {
           $sort: {
             totalGoals: -1,
           },
-        },
-        {
-          $skip: offset,
         },
         {
           $limit: 20,
@@ -159,8 +155,7 @@ export class PlayerService {
             leagueId: '$season.leagueId',
             'player._id': 1,
             'player.name': 1,
-            'player.imagePath': 1,
-            'player.position': 1,
+            'player.detailedPosition': 1,
             'player.team._id': '$team._id',
             'player.team.name': '$team.name',
             'player.team.imgPath': '$team.imgPath',
@@ -168,13 +163,10 @@ export class PlayerService {
         },
       ])
       .exec();
-
-    const count = await this.statModel.find({ seasonId }).countDocuments();
-    return { data: players, count };
+    return players;
   }
 
-  async getTopAssistantOfSeason(seasonId: number, page: number) {
-    const offset = (page - 1) * 20;
+  async getTopAssistantOfSeason(seasonId: number) {
     const players = await this.statModel
       .aggregate([
         {
@@ -186,9 +178,6 @@ export class PlayerService {
           $sort: {
             assists: -1,
           },
-        },
-        {
-          $skip: offset,
         },
         {
           $limit: 20,
@@ -240,8 +229,7 @@ export class PlayerService {
             leagueId: '$season.leagueId',
             'player._id': 1,
             'player.name': 1,
-            'player.position': 1,
-            'player.imagePath': 1,
+            'player.detailedPosition': 1,
             'player.team._id': '$team._id',
             'player.team.name': '$team.name',
             'player.team.imgPath': '$team.imgPath',
@@ -249,10 +237,7 @@ export class PlayerService {
         },
       ])
       .exec();
-
-    const count = await this.statModel.find({ seasonId }).countDocuments();
-
-    return { data: players, count };
+    return players;
   }
 
   async getTopYellowCard(seasonId: number) {
@@ -313,79 +298,6 @@ export class PlayerService {
         {
           $project: {
             yellowCards: 1,
-            season: '$season.name',
-            leagueId: '$season.leagueId',
-            'player._id': 1,
-            'player.name': 1,
-            'player.detailedPosition': 1,
-            'player.team._id': '$team._id',
-            'player.team.name': '$team.name',
-            'player.team.imgPath': '$team.imgPath',
-          },
-        },
-      ])
-      .exec();
-    return players;
-  }
-
-  async getTopMinutesPlayedOfSeason(seasonId: number) {
-    const players = await this.statModel
-      .aggregate([
-        {
-          $match: {
-            seasonId: seasonId,
-          },
-        },
-        {
-          $sort: {
-            minutesPlayed: -1,
-          },
-        },
-        {
-          $limit: 20,
-        },
-        {
-          $lookup: {
-            from: 'players',
-            localField: 'playerId',
-            foreignField: '_id',
-            as: 'player',
-          },
-        },
-        {
-          $unwind: {
-            path: '$player',
-          },
-        },
-        {
-          $lookup: {
-            from: 'teams',
-            localField: 'player.teamId',
-            foreignField: 'id',
-            as: 'team',
-          },
-        },
-        {
-          $unwind: {
-            path: '$team',
-          },
-        },
-        {
-          $lookup: {
-            from: 'seasons',
-            localField: 'seasonId',
-            foreignField: 'id',
-            as: 'season',
-          },
-        },
-        {
-          $unwind: {
-            path: '$season',
-          },
-        },
-        {
-          $project: {
-            minutesPlayed: 1,
             season: '$season.name',
             leagueId: '$season.leagueId',
             'player._id': 1,
@@ -573,7 +485,7 @@ export class PlayerService {
             first_name: '$player.firstName',
             last_name: '$player.lastName',
             image: '$player.imagePath',
-            cont: 1,
+            cont: 1
           },
         },
         {
