@@ -11,7 +11,8 @@ export enum LoggerModule {
   USER = 'user',
   SEASON = 'season',
   AUTH = 'auth',
-  NEWS = 'news'
+  NEWS = 'news',
+  SEARCH = 'search'
 }
 
 export enum LoggerType {
